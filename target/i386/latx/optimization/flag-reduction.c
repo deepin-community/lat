@@ -8,7 +8,7 @@
  * @note If the flag is 'unaffected', please DO NOT set at 'used' part!
  */
 static const IR1_EFLAG_USEDEF ir1_opcode_eflag_usedef[] = {
-    FLAG_DEFINE(INVALID, __INVALID, __INVALID, __INVALID),
+    FLAG_DEFINE(INVALID, __NONE, __INVALID, __INVALID),
     FLAG_DEFINE(AAA,     __AF, __ALL_EFLAGS, __OF | __SF | __ZF | __PF),
     FLAG_DEFINE(AAD,     __NONE, __ALL_EFLAGS, __OF | __AF | __CF),
     FLAG_DEFINE(AAM,     __NONE, __ALL_EFLAGS, __OF | __AF | __CF),

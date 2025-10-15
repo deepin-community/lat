@@ -289,13 +289,33 @@ bool translate_int_3(IR1_INST *pir1)
 
 bool translate_in(IR1_INST *pir1)
 {
-    /* in qemu just ignore in instruction */
+    /* raise GPF */
+    IR2_OPND tmp_opnd = ra_alloc_itemp();
+    IR2_OPND eip_opnd = ra_alloc_dbt_arg2();
+    li_d(eip_opnd, ir1_addr(pir1));
+    la_store_addrx(eip_opnd, env_ir2_opnd,
+                    lsenv_offset_of_eip(lsenv));
+    tr_save_registers_to_env(0xff, 0xff, option_save_xmm, options_to_save());
+    aot_load_host_addr(tmp_opnd, (ADDR)helper_raise_gpf,
+        LOAD_HELPER_RAISE_GPF, 0);
+    la_jirl(zero_ir2_opnd, tmp_opnd, 0);
+    ra_free_temp(tmp_opnd);
     return true;
 }
 
 bool translate_out(IR1_INST *pir1)
 {
-    /* in qemu just ignore in instruction */
+    /* raise GPF */
+    IR2_OPND tmp_opnd = ra_alloc_itemp();
+    IR2_OPND eip_opnd = ra_alloc_dbt_arg2();
+    li_d(eip_opnd, ir1_addr(pir1));
+    la_store_addrx(eip_opnd, env_ir2_opnd,
+                    lsenv_offset_of_eip(lsenv));
+    tr_save_registers_to_env(0xff, 0xff, option_save_xmm, options_to_save());
+    aot_load_host_addr(tmp_opnd, (ADDR)helper_raise_gpf,
+        LOAD_HELPER_RAISE_GPF, 0);
+    la_jirl(zero_ir2_opnd, tmp_opnd, 0);
+    ra_free_temp(tmp_opnd);
     return true;
 }
 
@@ -390,6 +410,18 @@ void helper_raise_int(void)
     set_CPUX86State_exception_is_int(lsenv, 1);
     set_CPUState_can_do_io(lsenv, 1);
     siglongjmp_cpu_jmp_env();
+}
+
+void helper_raise_gpf(void)
+{
+    CPUX86State *env = (CPUX86State *)lsenv->cpu_state;
+    CPUState *cs = env_cpu(env);
+
+    cs->exception_index = EXCP0D_GPF;
+    env->error_code = 0;
+    env->exception_is_int = 0;
+    env->exception_next_eip = env->eip;
+    cpu_loop_exit(cs);
 }
 
 void helper_raise_illop(void)
